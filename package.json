@@ -1,0 +1,22 @@
+{
+  "name": "strym",
+  "version": "1.0.0",
+  "description": "Strym-client",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/uomf/Strym-Client.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/uomf/Strym-Client/issues"
+  },
+  "homepage": "https://github.com/uomf/Strym-Client#readme",
+  "dependencies": {
+    "@react-google-maps/api": "^2.20.6"
+  }
+}
