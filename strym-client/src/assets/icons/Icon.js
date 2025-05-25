@@ -16,6 +16,7 @@ import {ReactComponent as plus} from './plus.svg'
 import {ReactComponent as minus} from './minus.svg'
 import {ReactComponent as close} from './close.svg'
 import {ReactComponent as business} from './business.svg'
+import {ReactComponent as external} from './ic-external.svg'
 
 const icons = {
     'up': up,
@@ -36,6 +37,7 @@ const icons = {
     'minus' : minus,
     'close' : close,
     'business' : business,
+    'external' : external,
 }
 
 export default function Icon({name, color, size}) {

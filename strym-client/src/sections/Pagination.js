@@ -1,6 +1,6 @@
 import CircleButton from "../components/CircleButton";
 
-export default function Pagination({handleAction}) {
+export default function Pagination({handleAction, hasMore}) {
     return(
         <div className="flex flex-col gap-3 px-8 items-center justify-center">
             <CircleButton name="up" isActivated={false} />

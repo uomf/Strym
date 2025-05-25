@@ -186,7 +186,7 @@ export default function Bookmark() {
                             }}>
                             <BottomButton 
                                 isLiked={true} 
-                                numOfLikes={325} 
+                                numOfLikes={1} 
                                 isMarked={true} />
                         </div>
                     </div>

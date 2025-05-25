@@ -1,6 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import Strym from '../sections/Strym';
-import Pagination from './Pagination';
 import { Map } from '../components/Map';
 import { useMapAnimation } from '../hooks/useMapAnimation';
 import { useNavigate } from 'react-router-dom';
@@ -14,6 +13,7 @@ export default function Content({ isSlotMachine }) {
         lat: 36.301186,
         lng: 127.5689622
     };
+    
     const [center, setCenter] = useState(initialCenter);
     const [map, setMap] = useState(null);
     const centerDivRef = useRef(null);
@@ -23,11 +23,71 @@ export default function Content({ isSlotMachine }) {
     const [places, setPlaces] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const [hasMore, setHasMore] = useState(true);
+    const [isSlotAnimationComplete, setIsSlotAnimationComplete] = useState(false);
+
+    const onClickSlot = async () => {
+        try {
+            const response = await axios.get(`${process.env.REACT_APP_STRYM_API_URL}/place/roulette/20`, {
+                headers: {
+                    'Access-Control-Allow-Origin': '*',
+                    'Content-Type': 'application/json',
+                },
+                withCredentials: true,
+            });
+            console.log("response.data: ", response.data.others);
+            setPlaces(response.data.others);
+            setIsSlotAnimationComplete(false);
+            
+            setTimeout(() => {
+                const placeWrapper = document.querySelector('.place-wrapper');
+                if (placeWrapper) {
+                    // 먼저 최상단으로 이동
+                    placeWrapper.scrollTo({
+                        top: 0,
+                        behavior: 'instant'
+                    });
+
+                    // 최상단 이동 후 애니메이션 시작
+                    setTimeout(() => {
+                        const startPosition = placeWrapper.scrollTop;
+                        const targetPosition = placeWrapper.scrollHeight - placeWrapper.clientHeight - 40;
+                        const distance = targetPosition - startPosition;
+                        const duration = 5000; // 5초
+                        const startTime = performance.now();
+
+                        function easeOutCubic(t) {
+                            return 1 - Math.pow(1 - t, 3);
+                        }
+
+                        function animateScroll(currentTime) {
+                            const elapsed = currentTime - startTime;
+                            const progress = Math.min(elapsed / duration, 1);
+                            const easedProgress = easeOutCubic(progress);
+                            
+                            placeWrapper.scrollTop = startPosition + (distance * easedProgress);
+
+                            if (progress < 1) {
+                                requestAnimationFrame(animateScroll);
+                            } else {
+                                setIsSlotAnimationComplete(true);
+                            }
+                        }
+
+                        requestAnimationFrame(animateScroll);
+                    }, 100); // 최상단 이동 후 100ms 후에 애니메이션 시작
+                }
+            }, 100);
+        } catch(error) {
+            if(error.response.status === 401) {
+                navigate('/signout');
+            }
+        }
+    }
 
     const fetchPlaces = useCallback(async () => {
         try {
             setIsLoading(true);
-            const response = await axios.get(`${process.env.REACT_APP_STRYM_API_URL}/place/get/5`, {
+            const resFeeds = await axios.get(`${process.env.REACT_APP_STRYM_API_URL}/place/get/5`, {
                 headers: {
                     'Access-Control-Allow-Origin': '*',
                     'Content-Type': 'application/json',
@@ -35,15 +95,25 @@ export default function Content({ isSlotMachine }) {
                 withCredentials: true,
             });
 
-            console.log(response.data);
+            console.log("reponse.data: ", resFeeds.data);
 
-            if(response.data.length < 5) {
+            if(resFeeds.data.length < 5) {
                 setHasMore(false);
             }
 
-            setPlaces(prev => [...prev, ...response.data]);
+            const resUploads = await axios.get(`${process.env.REACT_APP_STRYM_API_URL}/user/uploads`, {
+                headers: {
+                    'Access-Control-Allow-Origin': '*',
+                    'Content-Type': 'application/json',
+                },
+                withCredentials: true,
+            });
 
-            const lastPlaceId = response.data[response.data.length - 1].id;
+            const displayPlaces = [...resFeeds.data, ...resUploads.data];
+
+            setPlaces(prev => [...prev, ...displayPlaces]);
+
+            const lastPlaceId = resFeeds.data[resFeeds.data.length - 1].id;
             const postLastPlaceId = await axios.post(`${process.env.REACT_APP_STRYM_API_URL}/user/lastSeen/${lastPlaceId}`, {}, {
                 headers: {
                     'Access-Control-Allow-Origin': '*',
@@ -85,20 +155,7 @@ export default function Content({ isSlotMachine }) {
     }, [map, moveToLocation]);
 
     const handlePlaceChange = async (place) => {
-        // const res = await axios.get(`${process.env.REACT_APP_STRYM_API_URL}/bookmark/status/${place.id}`, {
-        //     headers: {
-        //         'Access-Control-Allow-Origin': '*',
-        //         'Content-Type': 'application/json',
-        //     },
-        //     withCredentials: true,
-        // });
-        // const isBookmarked = res.data;
-
-        // console.log(place);
-        // setCurrentPlaceLikes(place.likeCount);
         handleLocationMove(place.lat, place.lng);
-        // setCurrentCoord({lat: place.lat, lng: place.lng})
-        // setCurrentIsBookmarked(3423);
     };
 
     return(
@@ -124,26 +181,20 @@ export default function Content({ isSlotMachine }) {
             <div className='absolute w-full h-full z-[2]'>
                 <div className='w-full h-screen flex flex-row gap-8 px-8 justify-start'>
                     <Strym
+                        onClickSlot={onClickSlot}
                         isSlotMachine={isSlotMachine}
                         places={places}
                         onLoadMore={fetchPlaces}
                         isLoading={isLoading}
                         hasMore={hasMore}
                         onPlaceChange={handlePlaceChange}
+                        isSlotAnimationComplete={isSlotAnimationComplete}
                     />
                     <div ref={centerDivRef} className='flex-grow relative'>
                         <div className='absolute inset-0 flex items-center justify-center'>
                             <img src={picPinSelected} alt='pin' />
                         </div>
                     </div>
-                    {/* <Pagination
-                        handleAction={[handleUp, handleDown]}
-                        hasMore={hasMore}
-                        isFirst={isFirst}
-                    /> */}
-                    <Pagination
-                        hasMore={hasMore}
-                    />
                 </div>
             </div>
         </div>

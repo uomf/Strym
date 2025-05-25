@@ -1,7 +1,7 @@
 import Place from "../components/Place";
 import Icon from "../assets/icons/Icon";
 import Input from "../components/Input";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import {setDefaults, fromAddress} from "react-geocode";
@@ -16,11 +16,16 @@ export default function Upload() {
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
     const [addr, setAddr] = useState("");
-    const [coord, setCoord] = useState({lat: 0, lng: 0});
     const [img, setImg] = useState(null);
     const [imgUrl, setImgUrl] = useState("");
     const [isFilledInfo, setIsFilledInfo] = useState(false);
+    const [isUploaded, setIsUploaded] = useState(false);
     const navigate = useNavigate();
+
+    const titleInputRef = useRef(null);
+    const descriptionInputRef = useRef(null);
+    const addrInputRef = useRef(null);
+    const imgInputRef = useRef(null);
     
     const handleTitle = (title) => {
         if(title.length > 0) {
@@ -68,7 +73,7 @@ export default function Upload() {
             const postFeed = await axios.post(`${process.env.REACT_APP_STRYM_API_URL}/place/upload`, {
                 contentId: 202021148,
                 title: title,
-                imageURL: 'https://www.google.com/images/branding/googlelogo/1x/googlelogo_color_272x92dp.png',
+                imageURL: 'https://images.unsplash.com/photo-1569096651661-820d0de8b4ab?q=80&w=2188&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
                 siteURL: null,
                 addr: addr,
                 zipCode: 0,
@@ -85,6 +90,8 @@ export default function Upload() {
                 withCredentials: true
             });
             console.log(postFeed.data);
+            setIsFilledInfo(false);
+            setIsUploaded(true);
         } catch (err) {
             console.log(err.response)
             if(err.response.status === 401) {
@@ -131,10 +138,29 @@ export default function Upload() {
                 <div className="flex flex-col gap-4">
                     <h1 className='text-black font-bold text-3xl'>비즈니스 피드 업로드</h1>
                     <div className="font-medium text-gray-500 mb-4">비즈니스 피드를 업로드해서 방문율을 증가시켜 보세요!</div>
-                    <Input title="제목" type="text" placeholder="장소의 이름을 입력해주세요." handleEvent={handleTitle}/>
-                    <Input title="피드 설명" type="text" placeholder="장소의 설명을 입력해주세요.." handleEvent={handleSummary}/>
-                    <Input title="주소" type="text" placeholder="주소를 입력해주세요." handleEvent={handleAddr}/>
-                    <Input title="피드 사진" type="file" handleEvent={handleImg}/>
+                    <Input
+                        ref={titleInputRef}
+                        title="제목"
+                        type="text"
+                        placeholder="장소의 이름을 입력해주세요."
+                        handleEvent={handleTitle} />
+                    <Input
+                        ref={descriptionInputRef}
+                        title="피드 설명"
+                        type="text"
+                        placeholder="장소의 설명을 입력해주세요."
+                        handleEvent={handleSummary}/>
+                    <Input
+                        ref={addrInputRef}
+                        title="주소"
+                        type="text"
+                        placeholder="주소를 입력해주세요."
+                        handleEvent={handleAddr}/>
+                    <Input
+                        ref={imgInputRef}
+                        title="피드 사진"
+                        type="file"
+                        handleEvent={handleImg}/>
                 </div>
                 <button
                     className={
@@ -145,8 +171,8 @@ export default function Upload() {
                         }
                     `}
                     onClick={handleUpload}
-                    disabled={!isFilledInfo}>
-                        피드 업로드
+                    disabled={!isFilledInfo || isUploaded}>
+                        {isUploaded ? "피드 업로드 완료" : "피드 업로드"}
                 </button>
             </div>
         </div>

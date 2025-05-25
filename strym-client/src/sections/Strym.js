@@ -6,7 +6,7 @@ import {motion} from 'framer-motion';
 import { useState, useRef, useCallback, useEffect } from 'react';
 import axios from 'axios';
 
-export default function Strym({ isSlotMachine, places, onLoadMore, isLoading, hasMore, onPlaceChange }) {
+export default function Strym({ isSlotMachine, places, onLoadMore, isLoading, hasMore, onPlaceChange, onClickSlot, isSlotAnimationComplete }) {
     const navigate = useNavigate();
     const [currentPlaceIndex, setCurrentPlaceIndex] = useState(0);
     const placeRefs = useRef([]);
@@ -137,7 +137,7 @@ export default function Strym({ isSlotMachine, places, onLoadMore, isLoading, ha
                 setCurrentIsLiked(newIsLiked);
                 setCurrentIsBookmarked(newIsBookmarked);
                 setCurrentPlaceLikes(currentPlace.likeCount);
-
+                console.log("currentPlace.likeCount: ", currentPlace.likeCount);
                 // 상태 업데이트 후
                 console.log('=== 상태 업데이트 후 ===');
                 console.log('newIsLiked:', newIsLiked);
@@ -308,30 +308,31 @@ export default function Strym({ isSlotMachine, places, onLoadMore, isLoading, ha
         <div
             className='max-w-[646px] h-[100vh] relative'
             style={{width: '50%'}}>
-            <div className='absolute px-8 w-full h-full overflow-y-scroll scrollbar-hide pt-12'
+            <div className='place-wrapper absolute px-8 w-full h-full overflow-y-scroll scrollbar-hide pt-12'
                 style={{
                     scrollbarWidth: 'none',
                     msOverflowStyle: 'none',}}>
-                {places.map((place, index) => (
-                    <div
-                        key={index}
-                        ref={el => {
-                            placeRefs.current[index] = el;
-                            if (el) {
-                                placePositions.current[index] = el.offsetTop;
-                            }
-                        }}
-                        style={{
-                            height: 'calc(100vh - 6rem)',
-                            marginBottom: '2rem'
-                        }}>
-                        <Place
-                            title={place.title}
-                            summary={place.description}
-                            addr={place.addr}
-                            img={place.imageURL}
-                            isBusiness={place.isUploaded} />
-                    </div>
+                {places?.map((place, index) => (
+                        <div
+                            className='place'
+                            key={index}
+                            ref={el => {
+                                placeRefs.current[index] = el;
+                                if (el) {
+                                    placePositions.current[index] = el.offsetTop;
+                                }
+                            }}
+                            style={{
+                                height: 'calc(100vh - 6rem)',
+                                marginBottom: '2rem'
+                            }}>
+                            <Place
+                                title={place.title}
+                                summary={place.description}
+                                addr={place.addr}
+                                img={place.imageURL}
+                                isBusiness={place.isUploaded} />
+                        </div>
                 ))}
                 {isLoading && <div className="text-center py-4">로딩 중...</div>}
             </div>
@@ -362,26 +363,17 @@ export default function Strym({ isSlotMachine, places, onLoadMore, isLoading, ha
                 style={{
                     top: "calc(100vh - 132px)"
                 }}>
-                {isSlotMachine ? 
-                    <BottomButton 
-                        key={`bottom-button-${currentPlaceIndex}`}
-                        isLiked={currentIsLiked} 
-                        numOfLikes={currentPlaceLikes} 
-                        isMarked={currentIsBookmarked} 
-                        isSlotMachine={isSlotMachine} 
-                        handleLike={handleLike}
-                        handleBookmark={handleBookmark}
-                    />
-                    : 
-                    <BottomButton 
-                        key={`bottom-button-${currentPlaceIndex}`}
-                        isLiked={currentIsLiked} 
-                        numOfLikes={currentPlaceLikes} 
-                        isMarked={currentIsBookmarked} 
-                        isSlotMachine={isSlotMachine} 
-                        handleLike={handleLike}
-                        handleBookmark={handleBookmark}
-                    />}
+                <BottomButton 
+                    key={`bottom-button-${currentPlaceIndex}`}
+                    isLiked={currentIsLiked} 
+                    numOfLikes={currentPlaceLikes} 
+                    isMarked={currentIsBookmarked}
+                    isSlotMachine={isSlotMachine}
+                    handleLike={handleLike}
+                    handleBookmark={handleBookmark}
+                    onClickSlot={onClickSlot}
+                    isSlotAnimationComplete={isSlotAnimationComplete}
+                />
             </div>
         </div>
     )
